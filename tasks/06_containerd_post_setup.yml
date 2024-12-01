@@ -1,0 +1,40 @@
+---
+- name: Ensure containerd service is enabled and started
+  ansible.builtin.service:
+    name: containerd
+    state: started
+    enabled: true
+
+- name: Ensure containerd directory exists
+  ansible.builtin.file:
+    path: /etc/containerd
+    state: directory
+    mode: '0755'
+
+- name: Ensure containerd config exists
+  ansible.builtin.file:
+    path: /etc/containerd/config.toml
+    state: touch
+    modification_time: preserve
+    access_time: preserve
+  register: containerd_config
+
+- name: Ensure containerd default config exits
+  shell: containerd config default > /etc/containerd/config_default.toml
+
+- name: Ensure base containerd config exists
+  ansible.builtin.copy:
+    src: /etc/containerd/config_default.toml
+    dest: /etc/containerd/config.toml
+    remote_src: true
+  when: (containerd_config.changed)
+  notify:
+    - Restart containerd
+
+- name: Ensure containerd runtime options are set
+  ansible.builtin.replace:
+    path: /etc/containerd/config.toml
+    regexp: '[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]*(SystemdCgroup = false)'
+    replace: 'SystemdCgroup = true'
+  notify:
+    - Restart containerd

@@ -1,0 +1,6 @@
+galaxy_info:
+  author: ChrisZIT
+  description: Preps your linux server to become a K8s node.
+  license: license (GPL-2.0-or-later, MIT, etc)
+
+  min_ansible_version: 2.1

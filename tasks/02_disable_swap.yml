@@ -1,0 +1,7 @@
+---
+  - name: Ensure swap has is disabled in fstab
+    ansible.builtin.replace:
+      path: /etc/fstab
+      regexp: '^([^#].*?swap\s+sw\s+.*)$'
+      replace: '# \1'
+    notify: Reboot System
