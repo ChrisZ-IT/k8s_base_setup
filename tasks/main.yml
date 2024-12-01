@@ -1,2 +1,7 @@
 ---
-# tasks file for k8s_base_setup
+- ansible.builtin.include_tasks: "{{ role_path }}/tasks/01_install_requirements.yml"
+- ansible.builtin.include_tasks: "{{ role_path }}/tasks/02_disable_swap"
+- ansible.builtin.include_tasks: "{{ role_path }}/tasks/03_containerd_pre_setup.yml"
+- ansible.builtin.include_tasks: "{{ role_path }}/tasks/04_add_k8s_gpg_keys.yml"
+- ansible.builtin.include_tasks: "{{ role_path }}/tasks/05_install_k8s_stack.yml"
+- ansible.builtin.include_tasks: "{{ role_path }}/tasks/06_containerd_post_setup.yml"
