@@ -1,0 +1,40 @@
+---
+- name: Get latest kubernetes stable version number
+  ansible.builtin.uri:
+    url: https://dl.k8s.io/release/stable.txt
+    method: GET
+    return_content: true
+  delegate_to: localhost
+  run_once: true
+  register: k8s_version_results
+  when: desired_k8s_version == 'latest'
+
+- name: Set kubernetes version var
+  ansible.builtin.set_fact:
+    k8s_version: "{{ (k8s_version_results.content.split('.')[:2] | join('.')) }}"
+  when: desired_k8s_version == 'latest'
+
+- name: Set kubernetes version var
+  ansible.builtin.set_fact:
+    k8s_version: "{{ (desired_k8s_version.split('.')[:2] | join('.')) }}"
+  when: k8s_version != 'latest'
+
+- name: Add kubernetes gpg to apt keyring
+  ansible.builtin.shell: |
+    rm -rf /etc/apt/keyrings/kubernetes-apt-keyring.gpg ; \
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/{{ k8s_version }}/deb/Release.key | \
+    gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    exit 0
+  when: (ansible_facts.os_family == 'Debian')
+
+- name: Ensure kubernetes-apt-keyring.gpg permissions are set
+  ansible.builtin.file:
+    path: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    mode: '0644'
+  when: (ansible_facts.os_family == 'Debian')
+
+- name: Ensure Kubernetes apt repo is present
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/{{ k8s_version }}/deb/ /"
+    state: present
+  when: (ansible_facts.os_family == 'Debian')

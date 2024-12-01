@@ -1,0 +1,22 @@
+---
+- name: Install required Kubernetes dependencies
+  ansible.builtin.apt:
+    pkg: "{{ item }}"
+    state: present
+    update_cache: true
+  loop:
+    - containerd
+    - kubelet
+    - kubeadm
+    - kubectl
+  when: (ansible_facts.os_family == 'Debian')
+
+- name: Prevent Kubernetes dependencies from being upgraded
+  ansible.builtin.dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  loop:
+    - kubelet
+    - kubeadm
+    - kubectl
+  when: (ansible_facts.os_family == 'Debian')
